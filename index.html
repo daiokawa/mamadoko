@@ -6,7 +6,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50%25' x='50%25' dominant-baseline='central' text-anchor='middle' font-size='54'%3E🙋‍♀️%3C/text%3E%3C/svg%3E">
   <style>
     body{font-family:sans-serif;text-align:center;padding:20px;background:#fafafa;max-width:640px;margin:0 auto;}
-    #hero{font-size:24px;line-height:24px;height:24px;margin:10px 0; overflow: hidden;}  /* サイズ縮小 */
+    #hero{font-size:100px;line-height:100px;height:100px;margin:10px 0; overflow: hidden;}
     #line{display:flex;flex-wrap:wrap;justify-content:center;margin:20px 0;gap:6px;}
     .person{width:44px;height:44px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:default;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.2);}    
     #timer{font-size:26px;font-weight:bold;margin:10px;visibility:hidden;}
@@ -52,121 +52,116 @@
 
 <script>
 (() => {
-  const lineEl    = document.getElementById('line');
-  const timerEl   = document.getElementById('timer');
-  const scoreEl   = document.getElementById('score');
+  const startBtn = document.getElementById('startBtn');
+  const timerEl = document.getElementById('timer');
+  const scoreEl = document.getElementById('score');
+  const lineEl = document.getElementById('line');
   const optionsEl = document.getElementById('options');
-  const startBtn  = document.getElementById('startBtn');
-  const lbList    = document.getElementById('leaderboard');
-  const rankingEl = document.getElementById('ranking');
-  const resetBtn  = document.getElementById('resetBtn');
+  const heroEl = document.getElementById('hero');
   const nameInputContainer = document.getElementById('nameInputContainer');
   const playerNameInput = document.getElementById('playerNameInput');
   const submitNameBtn = document.getElementById('submitNameBtn');
+  const lbList = document.getElementById('leaderboard');
 
-  const MALE='👨', FEMALE='🙋‍♀️', ANIMALS=['🐼','🐮','🐷','🐥'];
-  const correctSoundSrc='correct.mp3', wrongSoundSrc='wrong.mp3';
-  const LB_KEY='mama_leaderboard', LASTNAME_KEY='mama_last_name';
+  let score = 0;
+  let peopleNum = 8;
+  let targetIndex = 0;
+  let timeLeft = 10;
+  let timerId;
+  const LB_KEY = 'mama_leaderboard';
+  const LASTNAME_KEY = 'mama_last_name';
 
-  let level, peopleNum, score, targetIndex, timeLeft, timerId, lockInput=false;
-  let reactTimes=[]; let questionStart=0; let gameEnded = false;
-  const SEP=' ⋯ ';
-  let currentAvgRT = 0;
-
-  const correctAudio = new Audio(correctSoundSrc);
-  const wrongAudio   = new Audio(wrongSoundSrc);
+  const correctAudio = new Audio('correct.mp3');
+  const wrongAudio = new Audio('wrong.mp3');
   const play = (audio) => {
     audio.currentTime = 0;
-    audio.play().catch(()=>{});
+    audio.play().catch(() => {});
   };
 
   const loadLB = () => { try{return JSON.parse(localStorage.getItem(LB_KEY))||[]}catch{return[]} };
   const saveLB = arr => localStorage.setItem(LB_KEY, JSON.stringify(arr));
-  const renderLB = () => { lbList.innerHTML=''; loadLB().forEach(e=>{ const li=document.createElement('li'); const rt = e.avg? `${e.avg.toFixed(2)}s` : '--'; li.textContent=`${e.name}${SEP}${e.score} 点${SEP}${rt}`; lbList.appendChild(li); }); };
-  const qualifies = s => { const lb=loadLB(); return s>0&&(lb.length<10||s>lb[lb.length-1].score); };
-  const recordHS = (n,s,avg) => {
-    if (!n) return;
-    const lb=loadLB();
-    lb.push({name:n,score:s,avg});
-    lb.sort((a,b)=>b.score-a.score);
-    if(lb.length>10) lb.length=10;
-    saveLB(lb);
+  const renderLB = () => {
+    lbList.innerHTML='';
+    loadLB().forEach(e=> {
+      const li=document.createElement('li');
+      const rt = e.avg ? `${e.avg.toFixed(2)}s` : '--';
+      li.textContent = `${e.name} ⋯ ${e.score} 点 ⋯ ${rt}`;
+      lbList.appendChild(li);
+    });
   };
 
-  function initGame(){
-    startBtn.style.display='none';
-    rankingEl.style.display='none';
+  function startGame() {
+    score = 0;
+    peopleNum = 8;
+    scoreEl.textContent = 'スコア: 0';
+    timerEl.style.visibility = 'visible';
+    document.getElementById('ranking').style.display = 'none';
     nameInputContainer.style.display = 'none';
-    timerEl.style.visibility='visible';
-    level=1;
-    peopleNum=8;
-    score=0;
-    reactTimes=[];
-    lockInput=false;
-    gameEnded = false;
-    updScore();
-    nextQ();
+    nextQuestion();
   }
-  const updScore = () => scoreEl.textContent = `スコア: ${score}`;
 
-  function renderLine(){ lineEl.innerHTML=''; const ac=Math.floor(score/5),idxSet=new Set(); while(idxSet.size<ac){ const i=Math.floor(Math.random()*peopleNum); if(i!==targetIndex) idxSet.add(i);} let pick=0; for(let i=0;i<peopleNum;i++){ const d=document.createElement('div'); d.className='person'; d.textContent = (i===targetIndex)?FEMALE : idxSet.has(i)?ANIMALS[pick++%ANIMALS.length] : MALE; lineEl.appendChild(d);} }
-
-  function startTimer(sec){
-    clearInterval(timerId);
-    timeLeft=sec;
-    updTimer();
-    timerId=setInterval(()=>{
-      timeLeft=Math.max(0,timeLeft-0.1);
-      updTimer();
-      if(timeLeft<=0 && !gameEnded){
-        clearInterval(timerId);
-        lockInput = true;
-        gameEnded = true;
-        play(wrongAudio);
-        setTimeout(()=>gameOver(false), 600);
-      }
-    },100);
-  }  
-  const updTimer = () => { timerEl.textContent = `のこりじかん ${timeLeft.toFixed(1)}秒`; };
-
-  function renderOpts(){ optionsEl.innerHTML=''; const cor=targetIndex+1; const opts=new Set([cor]); while(opts.size<4){ const n=cor+Math.floor(Math.random()*11)-5; if(n>=1&&n<=peopleNum) opts.add(n);} [...opts].sort((a,b)=>a-b).forEach(n=>{ const btn=document.createElement('button'); btn.className='optBtn'; btn.textContent=n; btn.dataset.val=n; btn.addEventListener('click',onClick); optionsEl.appendChild(btn);} ); }
-  function onClick(e){ if(lockInput || gameEnded) return; lockInput=true; const rt=(Date.now()-questionStart)/1000; handleAns(parseInt(e.currentTarget.dataset.val,10)===targetIndex+1, rt); }
-
-  function handleAns(ok, rt=0){
-    if (gameEnded) return;
-    clearInterval(timerId);
-    if(ok){
-      reactTimes.push(rt);
-      play(correctAudio);
-      score++;
-      updScore();
-      level++;
-      peopleNum+=2;
-      setTimeout(()=>{ lockInput=false; nextQ(); },300);
-    } else {
-      play(wrongAudio);
-      gameEnded = true;
-      setTimeout(()=>gameOver(true), 600);
+  function nextQuestion() {
+    lineEl.innerHTML = '';
+    optionsEl.innerHTML = '';
+    targetIndex = Math.floor(Math.random() * peopleNum);
+    for (let i = 0; i < peopleNum; i++) {
+      const div = document.createElement('div');
+      div.className = 'person';
+      div.textContent = i === targetIndex ? '🙋‍♀️' : '👨';
+      lineEl.appendChild(div);
     }
+    const correct = targetIndex + 1;
+    const opts = new Set([correct]);
+    while (opts.size < 4) {
+      const n = Math.floor(Math.random() * peopleNum) + 1;
+      opts.add(n);
+    }
+    [...opts].sort((a, b) => a - b).forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = 'optBtn';
+      btn.textContent = n;
+      btn.addEventListener('click', () => {
+        clearInterval(timerId);
+        if (n === correct) {
+          play(correctAudio);
+          score++;
+          scoreEl.textContent = `スコア: ${score}`;
+          peopleNum += 2;
+          setTimeout(nextQuestion, 500);
+        } else {
+          play(wrongAudio);
+          endGame();
+        }
+      });
+      optionsEl.appendChild(btn);
+    });
+    timeLeft = 10;
+    updateTimer();
+    timerId = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        clearInterval(timerId);
+        play(wrongAudio);
+        endGame();
+      }
+      updateTimer();
+    }, 100);
   }
 
-  function nextQ(){ targetIndex=Math.floor(Math.random()*peopleNum); renderLine(); renderOpts(); questionStart=Date.now(); startTimer(10);}  
+  function updateTimer() {
+    timerEl.textContent = `のこりじかん ${timeLeft.toFixed(1)}秒`;
+  }
 
-  function gameOver(triggeredByClick){
-    if (gameEnded) {
-      lockInput=true;
-      optionsEl.innerHTML='';
-      timerEl.style.visibility='hidden';
-      currentAvgRT = reactTimes.length ? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0;
-      if(qualifies(score)){
-        nameInputContainer.style.display = 'block';
-        playerNameInput.value = localStorage.getItem(LASTNAME_KEY) || '';
-        playerNameInput.focus();
-      } else {
-        rankingEl.style.display='block';
-        renderLB();
-        startBtn.style.display='';
-      }
+  function endGame() {
+    optionsEl.innerHTML = '';
+    timerEl.style.visibility = 'hidden';
+    if (score > 0) {
+      nameInputContainer.style.display = 'block';
+      playerNameInput.value = localStorage.getItem(LASTNAME_KEY) || '';
+      playerNameInput.focus();
+    } else {
+      document.getElementById('ranking').style.display = 'block';
+      document.getElementById('startBtn').style.display = '';
     }
   }
 
@@ -174,15 +169,19 @@
     const name = playerNameInput.value.trim();
     if(name){
       localStorage.setItem(LASTNAME_KEY, name);
-      recordHS(name, score, currentAvgRT);
+      const lb = loadLB();
+      lb.push({name, score: score, avg: 0});
+      lb.sort((a, b) => b.score - a.score);
+      if(lb.length > 10) lb.length = 10;
+      saveLB(lb);
       renderLB();
     }
     nameInputContainer.style.display = 'none';
-    rankingEl.style.display='block';
-    startBtn.style.display='';
+    document.getElementById('ranking').style.display = 'block';
+    document.getElementById('startBtn').style.display = '';
   });
 
-  resetBtn.addEventListener('click',()=>{
+  document.getElementById('resetBtn').addEventListener('click', () => {
     const pw = prompt("パスワードを入力してください：");
     if (pw === '0000') {
       localStorage.removeItem(LB_KEY);
@@ -193,7 +192,11 @@
     }
   });
 
-  startBtn.addEventListener('click',()=>{ clearInterval(timerId); initGame(); });
+  startBtn.addEventListener('click', () => {
+    startBtn.style.display = 'none';
+    startGame();
+  });
+
   renderLB();
 })();
 </script>
