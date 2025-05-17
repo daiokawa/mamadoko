@@ -56,12 +56,18 @@
   let reactTimes=[]; let questionStart=0;
   const SEP=' ⋯ ';
 
+  const correctAudio = new Audio(correctSoundSrc);
+  const wrongAudio   = new Audio(wrongSoundSrc);
+  const play = (audio) => {
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+  };
+
   const loadLB = () => { try{return JSON.parse(localStorage.getItem(LB_KEY))||[]}catch{return[]} };
   const saveLB = arr => localStorage.setItem(LB_KEY, JSON.stringify(arr));
   const renderLB = () => { lbList.innerHTML=''; loadLB().forEach(e=>{ const li=document.createElement('li'); const rt = e.avg? `${e.avg.toFixed(2)}s` : '--'; li.textContent=`${e.name}${SEP}${e.score} 点${SEP}${rt}`; lbList.appendChild(li); }); };
   const qualifies = s => { const lb=loadLB(); return s>0&&(lb.length<10||s>lb[lb.length-1].score); };
   const recordHS = (n,s,avg) => { const lb=loadLB(); lb.push({name:n,score:s,avg}); lb.sort((a,b)=>b.score-a.score); if(lb.length>10) lb.length=10; saveLB(lb);} ;
-  const play = src => { new Audio(src).play().catch(()=>{}); };
 
   function initGame(){ startBtn.style.display='none'; rankingEl.style.display='none'; timerEl.style.visibility='visible'; level=1; peopleNum=8; score=0; reactTimes=[]; lockInput=false; updScore(); nextQ(); }
   const updScore = () => scoreEl.textContent = `スコア: ${score}`;
@@ -74,7 +80,22 @@
   function renderOpts(){ optionsEl.innerHTML=''; const cor=targetIndex+1; const opts=new Set([cor]); while(opts.size<4){ const n=cor+Math.floor(Math.random()*11)-5; if(n>=1&&n<=peopleNum) opts.add(n);} [...opts].sort((a,b)=>a-b).forEach(n=>{ const btn=document.createElement('button'); btn.className='optBtn'; btn.textContent=n; btn.dataset.val=n; btn.addEventListener('click',onClick); optionsEl.appendChild(btn);} ); }
   function onClick(e){ if(lockInput) return; lockInput=true; const rt=(Date.now()-questionStart)/1000; handleAns(parseInt(e.currentTarget.dataset.val,10)===targetIndex+1, rt); }
 
-  function handleAns(ok, rt=0){ clearInterval(timerId); if(ok){ reactTimes.push(rt); play(correctSoundSrc); score++; updScore(); level++; peopleNum+=2; setTimeout(()=>{ lockInput=false; nextQ(); },300);} else { play(wrongSoundSrc); setTimeout(()=>gameOver(),200);} }
+  function handleAns(ok, rt=0){
+    clearInterval(timerId);
+    if(ok){
+      reactTimes.push(rt);
+      play(correctAudio);
+      score++;
+      updScore();
+      level++;
+      peopleNum+=2;
+      setTimeout(()=>{ lockInput=false; nextQ(); },300);
+    } else {
+      play(wrongAudio);
+      setTimeout(()=>gameOver(),600);
+    }
+  }
+
   function nextQ(){ targetIndex=Math.floor(Math.random()*peopleNum); renderLine(); renderOpts(); questionStart=Date.now(); startTimer(10);}  
 
   function gameOver(){ lockInput=true; optionsEl.innerHTML=''; timerEl.style.visibility='hidden'; rankingEl.style.display='block'; const avgRT=reactTimes.length? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0; if(qualifies(score)){ const last=localStorage.getItem(LASTNAME_KEY)||''; const name=prompt('ハイスコア！名前を入力してください:',last)||'名無し'; localStorage.setItem(LASTNAME_KEY,name); recordHS(name,score,avgRT); renderLB(); } alert(`ゲーム終了！\nスコア: ${score}`); startBtn.style.display=''; }
@@ -84,4 +105,3 @@
 </script>
 </body>
 </html>
-
