@@ -68,6 +68,7 @@
   let targetIndex = 0;
   let timeLeft = 10;
   let timerId;
+  let reactTimes = [];
   const LB_KEY = 'mama_leaderboard';
   const LASTNAME_KEY = 'mama_last_name';
 
@@ -93,6 +94,7 @@
   function startGame() {
     score = 0;
     peopleNum = 8;
+    reactTimes = [];
     scoreEl.textContent = 'スコア: 0';
     timerEl.style.visibility = 'visible';
     document.getElementById('ranking').style.display = 'none';
@@ -122,9 +124,11 @@
       btn.textContent = n;
       btn.addEventListener('click', () => {
         clearInterval(timerId);
+        const rt = 10 - timeLeft;
         if (n === correct) {
           play(correctAudio);
           score++;
+          reactTimes.push(rt);
           scoreEl.textContent = `スコア: ${score}`;
           peopleNum += 2;
           setTimeout(nextQuestion, 500);
@@ -165,12 +169,13 @@
     }
   }
 
-  submitNameBtn.addEventListener('click', () => {
+  function submitScore() {
     const name = playerNameInput.value.trim();
     if(name){
       localStorage.setItem(LASTNAME_KEY, name);
+      const avg = reactTimes.length ? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0;
       const lb = loadLB();
-      lb.push({name, score: score, avg: 0});
+      lb.push({name, score: score, avg: avg});
       lb.sort((a, b) => b.score - a.score);
       if(lb.length > 10) lb.length = 10;
       saveLB(lb);
@@ -179,6 +184,11 @@
     nameInputContainer.style.display = 'none';
     document.getElementById('ranking').style.display = 'block';
     document.getElementById('startBtn').style.display = '';
+  }
+
+  submitNameBtn.addEventListener('click', submitScore);
+  playerNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitScore();
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
