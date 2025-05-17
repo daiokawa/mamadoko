@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>ママはひだりから数えてなんばんめ？</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50%25' x='50%25' dominant-baseline='central' text-anchor='middle' font-size='54'%3E🙋‍♀️%3C/text%3E%3C/svg%3E">
+  <style>
+    body{font-family:sans-serif;text-align:center;padding:20px;background:#fafafa;max-width:640px;margin:0 auto;}
+    #hero{font-size:200px;line-height:1;margin:10px 0;}
+    #line{display:flex;flex-wrap:wrap;justify-content:center;margin:20px 0;gap:6px;}
+    .person{width:44px;height:44px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:default;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.2);}    
+    #timer{font-size:26px;font-weight:bold;margin:10px;visibility:hidden;}
+    #score{margin:10px;font-weight:bold;font-size:20px;}
+    #options{display:flex;justify-content:center;gap:16px;margin-top:16px;flex-wrap:wrap;}
+    .optBtn{padding:16px 32px;font-size:24px;border:none;border-radius:10px;background:#2196f3;color:#fff;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.2);}    
+    .optBtn:hover{filter:brightness(1.1);}  
+    .optBtn.disabled{pointer-events:none;opacity:0.6;}
+    #startBtn{padding:14px 32px;font-size:22px;border:none;border-radius:10px;background:#4caf50;color:#fff;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.25);}    
+    #startBtn:hover{filter:brightness(1.1);}  
+    #ranking{margin-top:30px;text-align:left;}
+    #ranking h2{font-size:22px;margin-bottom:6px;}
+    #lbHeader{font-weight:bold;margin-bottom:4px;padding-left:20px;}
+    #leaderboard{padding-left:20px;}
+  </style>
+</head>
+<body>
+<h1>ママはひだりから数えてなんばんめ？</h1>
+<div id="hero" aria-label="挙手する女性">🙋‍♀️</div>
+<div id="score">スコア: 0</div>
+<div id="timer">のこりじかん 0秒</div>
+<div id="line"></div>
+<div id="options"></div>
+<button id="startBtn">スタート</button>
+
+<section id="ranking">
+  <h2>ランキング</h2>
+  <div id="lbHeader">名前 ⋯ スコア ⋯ 平均反応速度</div>
+  <ol id="leaderboard"></ol>
+</section>
+
+<script>
+(() => {
+  const lineEl    = document.getElementById('line');
+  const timerEl   = document.getElementById('timer');
+  const scoreEl   = document.getElementById('score');
+  const optionsEl = document.getElementById('options');
+  const startBtn  = document.getElementById('startBtn');
+  const lbList    = document.getElementById('leaderboard');
+  const rankingEl = document.getElementById('ranking');
+
+  const MALE='👨', FEMALE='🙋‍♀️', ANIMALS=['🐼','🐮','🐷','🐥'];
+  const correctSoundSrc='correct.mp3', wrongSoundSrc='wrong.mp3';
+  const LB_KEY='mama_leaderboard', LASTNAME_KEY='mama_last_name';
+
+  let level, peopleNum, score, targetIndex, timeLeft, timerId, lockInput=false;
+  let reactTimes=[]; let questionStart=0;
+  const SEP=' ⋯ ';
+
+  const loadLB = () => { try{return JSON.parse(localStorage.getItem(LB_KEY))||[]}catch{return[]} };
+  const saveLB = arr => localStorage.setItem(LB_KEY, JSON.stringify(arr));
+  const renderLB = () => { lbList.innerHTML=''; loadLB().forEach(e=>{ const li=document.createElement('li'); const rt = e.avg? `${e.avg.toFixed(2)}s` : '--'; li.textContent=`${e.name}${SEP}${e.score} 点${SEP}${rt}`; lbList.appendChild(li); }); };
+  const qualifies = s => { const lb=loadLB(); return s>0&&(lb.length<10||s>lb[lb.length-1].score); };
+  const recordHS = (n,s,avg) => { const lb=loadLB(); lb.push({name:n,score:s,avg}); lb.sort((a,b)=>b.score-a.score); if(lb.length>10) lb.length=10; saveLB(lb);} ;
+  const play = src => { new Audio(src).play().catch(()=>{}); };
+
+  function initGame(){ startBtn.style.display='none'; rankingEl.style.display='none'; timerEl.style.visibility='visible'; level=1; peopleNum=8; score=0; reactTimes=[]; lockInput=false; updScore(); nextQ(); }
+  const updScore = () => scoreEl.textContent = `スコア: ${score}`;
+
+  function renderLine(){ lineEl.innerHTML=''; const ac=Math.floor(score/5),idxSet=new Set(); while(idxSet.size<ac){ const i=Math.floor(Math.random()*peopleNum); if(i!==targetIndex) idxSet.add(i);} let pick=0; for(let i=0;i<peopleNum;i++){ const d=document.createElement('div'); d.className='person'; d.textContent = (i===targetIndex)?FEMALE : idxSet.has(i)?ANIMALS[pick++%ANIMALS.length] : MALE; lineEl.appendChild(d);} }
+
+  function startTimer(sec){ clearInterval(timerId); timeLeft=sec; updTimer(); timerId=setInterval(()=>{ timeLeft=Math.max(0,timeLeft-0.1); updTimer(); if(timeLeft<=0){ clearInterval(timerId); handleAns(false);} },100);}  
+  const updTimer = () => { timerEl.textContent = `のこりじかん ${timeLeft.toFixed(1)}秒`; };
+
+  function renderOpts(){ optionsEl.innerHTML=''; const cor=targetIndex+1; const opts=new Set([cor]); while(opts.size<4){ const n=cor+Math.floor(Math.random()*11)-5; if(n>=1&&n<=peopleNum) opts.add(n);} [...opts].sort((a,b)=>a-b).forEach(n=>{ const btn=document.createElement('button'); btn.className='optBtn'; btn.textContent=n; btn.dataset.val=n; btn.addEventListener('click',onClick); optionsEl.appendChild(btn);} ); }
+  function onClick(e){ if(lockInput) return; lockInput=true; const rt=(Date.now()-questionStart)/1000; handleAns(parseInt(e.currentTarget.dataset.val,10)===targetIndex+1, rt); }
+
+  function handleAns(ok, rt=0){ clearInterval(timerId); if(ok){ reactTimes.push(rt); play(correctSoundSrc); score++; updScore(); level++; peopleNum+=2; setTimeout(()=>{ lockInput=false; nextQ(); },300);} else { play(wrongSoundSrc); setTimeout(()=>gameOver(),200);} }
+  function nextQ(){ targetIndex=Math.floor(Math.random()*peopleNum); renderLine(); renderOpts(); questionStart=Date.now(); startTimer(10);}  
+
+  function gameOver(){ lockInput=true; optionsEl.innerHTML=''; timerEl.style.visibility='hidden'; rankingEl.style.display='block'; const avgRT=reactTimes.length? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0; if(qualifies(score)){ const last=localStorage.getItem(LASTNAME_KEY)||''; const name=prompt('ハイスコア！名前を入力してください:',last)||'名無し'; localStorage.setItem(LASTNAME_KEY,name); recordHS(name,score,avgRT); renderLB(); } alert(`ゲーム終了！\nスコア: ${score}`); startBtn.style.display=''; }
+
+  startBtn.addEventListener('click',()=>{ clearInterval(timerId); initGame(); }); renderLB();
+})();
+</script>
+</body>
+</html>
+
