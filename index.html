@@ -21,6 +21,7 @@
     #ranking h2{font-size:22px;margin-bottom:6px;}
     #lbHeader{font-weight:bold;margin-bottom:4px;padding-left:20px;}
     #leaderboard{padding-left:20px;}
+    #resetBtn{margin-left:20px;margin-top:10px;padding:6px 16px;font-size:14px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;}
   </style>
 </head>
 <body>
@@ -36,6 +37,7 @@
   <h2>ランキング</h2>
   <div id="lbHeader">名前 ⋯ スコア ⋯ 平均反応速度</div>
   <ol id="leaderboard"></ol>
+  <button id="resetBtn">ランキングをリセット</button>
 </section>
 
 <script>
@@ -47,6 +49,7 @@
   const startBtn  = document.getElementById('startBtn');
   const lbList    = document.getElementById('leaderboard');
   const rankingEl = document.getElementById('ranking');
+  const resetBtn  = document.getElementById('resetBtn');
 
   const MALE='👨', FEMALE='🙋‍♀️', ANIMALS=['🐼','🐮','🐷','🐥'];
   const correctSoundSrc='correct.mp3', wrongSoundSrc='wrong.mp3';
@@ -67,7 +70,14 @@
   const saveLB = arr => localStorage.setItem(LB_KEY, JSON.stringify(arr));
   const renderLB = () => { lbList.innerHTML=''; loadLB().forEach(e=>{ const li=document.createElement('li'); const rt = e.avg? `${e.avg.toFixed(2)}s` : '--'; li.textContent=`${e.name}${SEP}${e.score} 点${SEP}${rt}`; lbList.appendChild(li); }); };
   const qualifies = s => { const lb=loadLB(); return s>0&&(lb.length<10||s>lb[lb.length-1].score); };
-  const recordHS = (n,s,avg) => { const lb=loadLB(); lb.push({name:n,score:s,avg}); lb.sort((a,b)=>b.score-a.score); if(lb.length>10) lb.length=10; saveLB(lb);} ;
+  const recordHS = (n,s,avg) => {
+    if (!n) return;
+    const lb=loadLB();
+    lb.push({name:n,score:s,avg});
+    lb.sort((a,b)=>b.score-a.score);
+    if(lb.length>10) lb.length=10;
+    saveLB(lb);
+  };
 
   function initGame(){
     startBtn.style.display='none';
@@ -98,7 +108,7 @@
         lockInput = true;
         gameEnded = true;
         play(wrongAudio);
-        setTimeout(()=>gameOver(),600);
+        setTimeout(gameOver, 600);
       }
     },100);
   }  
@@ -121,28 +131,44 @@
     } else {
       play(wrongAudio);
       gameEnded = true;
-      setTimeout(()=>gameOver(),600);
+      setTimeout(gameOver, 600);
     }
   }
 
   function nextQ(){ targetIndex=Math.floor(Math.random()*peopleNum); renderLine(); renderOpts(); questionStart=Date.now(); startTimer(10);}  
 
   function gameOver(){
-    lockInput=true;
-    optionsEl.innerHTML='';
-    timerEl.style.visibility='hidden';
-    rankingEl.style.display='block';
-    const avgRT=reactTimes.length? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0;
-    if(qualifies(score)){
-      const last=localStorage.getItem(LASTNAME_KEY)||'';
-      const name=prompt('ハイスコア！名前を入力してください:',last)||'名無し';
-      localStorage.setItem(LASTNAME_KEY,name);
-      recordHS(name,score,avgRT);
-      renderLB(); 
+    if (gameEnded) {
+      lockInput=true;
+      optionsEl.innerHTML='';
+      timerEl.style.visibility='hidden';
+      rankingEl.style.display='block';
+      const avgRT=reactTimes.length? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0;
+      if(qualifies(score)){
+        const last=localStorage.getItem(LASTNAME_KEY)||'';
+        const nameInput=prompt('ハイスコア！名前を入力してください:',last);
+        const name=(nameInput||'').trim();
+        if(name){
+          localStorage.setItem(LASTNAME_KEY,name);
+          recordHS(name,score,avgRT);
+        }
+        renderLB(); 
+      }
+      alert(`ゲーム終了！\nスコア: ${score}`);
+      startBtn.style.display='';
     }
-    alert(`ゲーム終了！\nスコア: ${score}`);
-    startBtn.style.display='';
   }
+
+  resetBtn.addEventListener('click',()=>{
+    const pw = prompt("パスワードを入力してください：");
+    if (pw === '0000') {
+      localStorage.removeItem(LB_KEY);
+      renderLB();
+      alert("ランキングをリセットしました。");
+    } else {
+      alert("パスワードが違います。");
+    }
+  });
 
   startBtn.addEventListener('click',()=>{ clearInterval(timerId); initGame(); }); renderLB();
 })();
