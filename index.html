@@ -57,7 +57,6 @@
   const scoreEl = document.getElementById('score');
   const lineEl = document.getElementById('line');
   const optionsEl = document.getElementById('options');
-  const heroEl = document.getElementById('hero');
   const nameInputContainer = document.getElementById('nameInputContainer');
   const playerNameInput = document.getElementById('playerNameInput');
   const submitNameBtn = document.getElementById('submitNameBtn');
@@ -106,17 +105,33 @@
     lineEl.innerHTML = '';
     optionsEl.innerHTML = '';
     targetIndex = Math.floor(Math.random() * peopleNum);
+    const animals = ['🐼','🐮','🐷','🐥'];
+    const numAnimals = Math.floor(score / 5);
+    const animalIndices = new Set();
+    while (animalIndices.size < numAnimals) {
+      const idx = Math.floor(Math.random() * peopleNum);
+      if (idx !== targetIndex) animalIndices.add(idx);
+    }
+    let animalCount = 0;
     for (let i = 0; i < peopleNum; i++) {
       const div = document.createElement('div');
       div.className = 'person';
-      div.textContent = i === targetIndex ? '🙋‍♀️' : '👨';
+      if (i === targetIndex) {
+        div.textContent = '🙋‍♀️';
+      } else if (animalIndices.has(i)) {
+        div.textContent = animals[animalCount % animals.length];
+        animalCount++;
+      } else {
+        div.textContent = '👨';
+      }
       lineEl.appendChild(div);
     }
     const correct = targetIndex + 1;
     const opts = new Set([correct]);
     while (opts.size < 4) {
-      const n = Math.floor(Math.random() * peopleNum) + 1;
-      opts.add(n);
+      const offset = Math.floor(Math.random() * 11) - 5;
+      const n = correct + offset;
+      if (n >= 1 && n <= peopleNum) opts.add(n);
     }
     [...opts].sort((a, b) => a - b).forEach(n => {
       const btn = document.createElement('button');
