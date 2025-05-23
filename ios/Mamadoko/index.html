@@ -9,9 +9,7 @@
     body{font-family:sans-serif;text-align:center;padding:20px 10px;background:#dcf0ff;width:100%;max-width:100%;margin:0 auto;box-sizing:border-box;}
     h1{font-size:18px;margin:5px 0;}
     #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
-    /* gameAreaの枠を完全に消す */
-    #gameArea{max-height:50vh; overflow-y:auto; -webkit-overflow-scrolling:touch; background:transparent; padding:0; margin:0; border:none; box-shadow:none; outline:none;}
-    #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
+    #line{display:none;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
     .row{display:flex;justify-content:center;width:100%;margin-bottom:2px;}
     .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;background:transparent;}
     #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
@@ -41,7 +39,6 @@
   <div id="hero" aria-label="挙手する女性" style="margin-top:60px;">🙋‍♀️</div>
   <div id="score">スコア: 0</div>
   <div id="timer">のこりじかん 0秒</div>
-  <!-- gameAreaを直接、装飾なしのdivとして表示 -->
   <div id="line"></div>
   <div id="options"></div>
   <button id="startBtn" style="margin-top:15px;">START</button>
@@ -252,6 +249,7 @@
     if (!gameActive) return; // ゲームがアクティブでなければ何もしない
     
     lineEl.innerHTML = '';
+    lineEl.style.display = 'flex'; // ゲーム開始時に表示
     optionsEl.innerHTML = '';
     targetIndex = Math.floor(Math.random() * peopleNum);
     
@@ -371,6 +369,7 @@
     clearInterval(timerId);
     timerId = null;
     
+    lineEl.style.display = 'none'; // ゲーム終了時に非表示
     optionsEl.innerHTML = '';
     timerEl.style.visibility = 'hidden';
     
