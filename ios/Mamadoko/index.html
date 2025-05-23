@@ -11,7 +11,7 @@
     #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
     #gameArea{background:#e6f5ff; border-radius:10px; padding:5px 0; margin:5px 0; border:1px solid rgba(0,0,0,0.1);}
     #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
-    .person{width:26px;height:26px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:default;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.2);}    
+    .person{width:26px;height:26px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:default;user-select:none;}    
     #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
     #score{margin:5px auto 15px;font-weight:bold;font-size:20px;text-align:center;width:100%;}
     #options{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
@@ -269,7 +269,8 @@
         div.className = 'person';
         if (i === targetIndex) {
           div.textContent = '🙋‍♀️';
-          div.style.boxShadow = '0 0 5px #ffcc00'; // 正解を少し目立たせる
+          // 白い枠を削除し、代わりにハイライト効果だけを残す
+          div.style.textShadow = '0 0 3px #ffcc00';
         } else if (animalIndices.has(i)) {
           div.textContent = animals[animalCount % animals.length];
           animalCount++;
