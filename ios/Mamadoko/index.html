@@ -11,7 +11,9 @@
     #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
     #gameArea{background:#e6f5ff; border-radius:10px; padding:5px 0; margin:5px 0; border:1px solid rgba(0,0,0,0.1);}
     #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
-    .person{width:26px;height:26px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:default;user-select:none;}    
+    /* 白枠を完全に消すためのスタイル変更 */
+    .row{display:flex;justify-content:center;width:100%;margin-bottom:2px;}
+    .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;}
     #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
     #score{margin:5px auto 15px;font-weight:bold;font-size:20px;text-align:center;width:100%;}
     #options{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
@@ -86,11 +88,15 @@
   let timeLeft = 10;
   let timerId;
   let reactTimes = [];
+  let gameActive = false; // ゲームがアクティブかどうかのフラグ
   const LB_KEY = 'mama_leaderboard';
   const LASTNAME_KEY = 'mama_last_name';
 
   // ネイティブ側の音声再生関数呼び出し
   const play = (audio) => {
+    // ゲームがアクティブでない場合は音を鳴らさない
+    if (!gameActive && audio === wrongAudio) return;
+    
     try {
       if (audio === correctAudio) {
         console.log("正解音を再生するよう要求");
@@ -222,6 +228,7 @@
     score = 0;
     peopleNum = 8;
     reactTimes = [];
+    gameActive = true; // ゲーム開始
     scoreEl.textContent = 'スコア: 0';
     timerEl.style.visibility = 'visible';
     document.getElementById('ranking').style.display = 'none';
@@ -235,6 +242,8 @@
   }
 
   function nextQuestion() {
+    if (!gameActive) return; // ゲームがアクティブでなければ何もしない
+    
     lineEl.innerHTML = '';
     optionsEl.innerHTML = '';
     targetIndex = Math.floor(Math.random() * peopleNum);
@@ -255,22 +264,19 @@
     for (let row = 0; row < numRows; row++) {
       // 各行のコンテナを作成
       const rowDiv = document.createElement('div');
-      rowDiv.style.display = 'flex';
-      rowDiv.style.justifyContent = 'center';
-      rowDiv.style.width = '100%';
-      rowDiv.style.marginBottom = '2px';
+      rowDiv.className = 'row';
       
       // 各行に12人まで配置
       const startIdx = row * 12;
       const endIdx = Math.min(startIdx + 12, peopleNum);
       
       for (let i = startIdx; i < endIdx; i++) {
-        const div = document.createElement('div');
+        const div = document.createElement('span');
         div.className = 'person';
         if (i === targetIndex) {
           div.textContent = '🙋‍♀️';
-          // 白い枠を削除し、代わりにハイライト効果だけを残す
-          div.style.textShadow = '0 0 3px #ffcc00';
+          // ハイライト効果だけ適用
+          div.style.textShadow = '0 0 5px #ffcc00';
         } else if (animalIndices.has(i)) {
           div.textContent = animals[animalCount % animals.length];
           animalCount++;
@@ -295,6 +301,8 @@
       btn.textContent = n;
       // シンプルなクリックイベント
       btn.addEventListener('click', () => {
+        if (!gameActive) return; // ゲームがアクティブでなければ何もしない
+        
         clearInterval(timerId);
         const rt = 10 - timeLeft;
         
@@ -314,7 +322,13 @@
     });
     timeLeft = 10;
     updateTimer();
+    if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
+      if (!gameActive) {
+        clearInterval(timerId);
+        return;
+      }
+      
       timeLeft -= 0.1;
       if (timeLeft <= 0) {
         clearInterval(timerId);
@@ -330,6 +344,12 @@
   }
 
   function endGame() {
+    if (!gameActive) return;
+    
+    gameActive = false; // ゲーム終了
+    clearInterval(timerId);
+    timerId = null;
+    
     optionsEl.innerHTML = '';
     timerEl.style.visibility = 'hidden';
     
@@ -381,6 +401,26 @@
     }
   });
 
+  // ページの可視性変更イベントを監視
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && gameActive) {
+      // ページが非表示になったらゲームを一時停止
+      clearInterval(timerId);
+    } else if (!document.hidden && gameActive) {
+      // ページが再表示されたらタイマーを再開
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        timeLeft -= 0.1;
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          play(wrongAudio);
+          endGame();
+        }
+        updateTimer();
+      }, 100);
+    }
+  });
+  
   // スタートボタンのイベントハンドラ
   startBtn.addEventListener('click', function() {
     startBtn.style.display = 'none';
