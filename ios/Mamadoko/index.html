@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ママはひだりから数えてなんばんめ？</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50%25' x='50%25' dominant-baseline='central' text-anchor='middle' font-size='54'%3E🙋‍♀️%3C/text%3E%3C/svg%3E">
+  <style>
+    body{font-family:sans-serif;text-align:center;padding:20px 10px;background:#dcf0ff;width:100%;max-width:100%;margin:0 auto;box-sizing:border-box;}
+    h1{font-size:18px;margin:5px 0;}
+    #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
+    #gameArea{background:#e6f5ff; border-radius:10px; padding:5px 0; margin:5px 0; border:1px solid rgba(0,0,0,0.1);}
+    #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
+    .person{width:26px;height:26px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:default;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.2);}    
+    #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
+    #score{margin:5px auto 15px;font-weight:bold;font-size:20px;text-align:center;width:100%;}
+    #options{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+    .optBtn{padding:12px 24px;font-size:20px;border:none;border-radius:8px;background:#2196f3;color:#fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);}    
+    .optBtn:active{background:#1976D2;}
+    #startBtn{padding:15px 30px;font-size:22px;border:none;border-radius:10px;background:#0066cc;color:#fff;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.3);-webkit-appearance:none;}    
+    #startBtn:hover{filter:brightness(1.1);}  
+    #ranking{margin-top:30px;text-align:left;padding-left:20px;padding-right:20px;}
+    #ranking h2{font-size:22px;margin-bottom:6px;}
+    #leaderboard{padding-left:40px;}
+    #resetBtn{margin-left:20px;margin-top:10px;padding:6px 16px;font-size:14px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;}
+    #nameInputContainer{margin-top:20px; display:none;}
+    #nameInputContainer input[type="text"]{padding:10px;font-size:18px;border:1px solid #ccc; border-radius:5px; margin-right:10px;}
+    #nameInputContainer button{padding:10px 20px;font-size:18px;border:none;border-radius:5px;background:#2196f3;color:#fff;cursor:pointer;}
+    #nameInputContainer button:hover{filter:brightness(1.1);}
+  </style>
+</head>
+<body>
+<div style="max-width:360px; margin:0 auto;">
+  <h1>ママはひだりから数えてなんばんめ？</h1>
+  <div id="hero" aria-label="挙手する女性" style="margin-top:60px;">🙋‍♀️</div>
+  <div id="score">スコア: 0</div>
+  <div id="timer">のこりじかん 0秒</div>
+  <div id="gameArea" style="max-height:50vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+    <div id="line"></div>
+  </div>
+  <div id="options"></div>
+  <button id="startBtn" style="margin-top:15px;">START</button>
+</div>
+
+<div id="nameInputContainer">
+  <p>ハイスコア！名前を入力してください:</p>
+  <input type="text" id="playerNameInput" placeholder="なまえ">
+  <button id="submitNameBtn">登録</button>
+</div>
+
+<section id="ranking">
+  <h2>ランキング</h2>
+  <ol id="leaderboard"></ol>
+  <button id="resetBtn">ランキングをリセット</button>
+</section>
+
+<script>
+(() => {
+  const startBtn = document.getElementById('startBtn');
+  const timerEl = document.getElementById('timer');
+  const scoreEl = document.getElementById('score');
+  const lineEl = document.getElementById('line');
+  const optionsEl = document.getElementById('options');
+  const nameInputContainer = document.getElementById('nameInputContainer');
+  const playerNameInput = document.getElementById('playerNameInput');
+  const submitNameBtn = document.getElementById('submitNameBtn');
+  const lbList = document.getElementById('leaderboard');
+
+  let score = 0;
+  let peopleNum = 8;
+  let targetIndex = 0;
+  let timeLeft = 10;
+  let timerId;
+  let reactTimes = [];
+  const LB_KEY = 'mama_leaderboard';
+  const LASTNAME_KEY = 'mama_last_name';
+
+  // ネイティブ側の音声再生関数呼び出し
+  const play = (audio) => {
+    try {
+      if (audio === correctAudio) {
+        console.log("正解音を再生するよう要求");
+        try {
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.playCorrect) {
+            window.webkit.messageHandlers.playCorrect.postMessage('play');
+            console.log("正解音メッセージ送信成功");
+          } else {
+            console.log("正解音メッセージハンドラが見つかりません");
+          }
+        } catch (e) {
+          console.log("正解音メッセージエラー:", e);
+        }
+      } else if (audio === wrongAudio) {
+        console.log("不正解音を再生するよう要求");
+        try {
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.playWrong) {
+            window.webkit.messageHandlers.playWrong.postMessage('play');
+            console.log("不正解音メッセージ送信成功");
+          } else {
+            console.log("不正解音メッセージハンドラが見つかりません");
+          }
+        } catch (e) {
+          console.log("不正解音メッセージエラー:", e);
+        }
+      }
+    } catch (e) {
+      console.log("音声再生エラー:", e);
+    }
+  };
+  
+  // ダミーオブジェクト
+  const correctAudio = { type: 'correct' };
+  const wrongAudio = { type: 'wrong' };
+
+  const loadLB = () => { 
+    try {
+      const data = localStorage.getItem(LB_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch(e) {
+      console.log('Loading leaderboard failed:', e);
+      return [];
+    }
+  };
+  
+  const saveLB = arr => {
+    try {
+      localStorage.setItem(LB_KEY, JSON.stringify(arr));
+    } catch(e) {
+      console.log('Saving leaderboard failed:', e);
+    }
+  };
+  
+  const renderLB = () => {
+    try {
+      lbList.innerHTML='';
+      loadLB().forEach(e=> {
+        const li=document.createElement('li');
+        li.textContent = `${e.name} ⋯ ${e.score} 点`;
+        lbList.appendChild(li);
+      });
+    } catch(e) {
+      console.log('Rendering leaderboard failed:', e);
+    }
+  };
+
+  function startGame() {
+    score = 0;
+    peopleNum = 8;
+    reactTimes = [];
+    scoreEl.textContent = 'スコア: 0';
+    timerEl.style.visibility = 'visible';
+    document.getElementById('ranking').style.display = 'none';
+    nameInputContainer.style.display = 'none';
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    lineEl.innerHTML = '';
+    optionsEl.innerHTML = '';
+    targetIndex = Math.floor(Math.random() * peopleNum);
+    
+    // スクロール位置をリセット
+    document.getElementById('gameArea').scrollTop = 0;
+    const animals = ['🐼','🐮','🐷','🐥'];
+    const numAnimals = Math.floor(score / 5);
+    const animalIndices = new Set();
+    while (animalIndices.size < numAnimals) {
+      const idx = Math.floor(Math.random() * peopleNum);
+      if (idx !== targetIndex) animalIndices.add(idx);
+    }
+    let animalCount = 0;
+    
+    // 12人ごとに折り返すためのロジック
+    const numRows = Math.ceil(peopleNum / 12);
+    for (let row = 0; row < numRows; row++) {
+      // 各行のコンテナを作成
+      const rowDiv = document.createElement('div');
+      rowDiv.style.display = 'flex';
+      rowDiv.style.justifyContent = 'center';
+      rowDiv.style.width = '100%';
+      rowDiv.style.marginBottom = '2px';
+      
+      // 各行に12人まで配置
+      const startIdx = row * 12;
+      const endIdx = Math.min(startIdx + 12, peopleNum);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        const div = document.createElement('div');
+        div.className = 'person';
+        if (i === targetIndex) {
+          div.textContent = '🙋‍♀️';
+          div.style.boxShadow = '0 0 5px #ffcc00'; // 正解を少し目立たせる
+        } else if (animalIndices.has(i)) {
+          div.textContent = animals[animalCount % animals.length];
+          animalCount++;
+        } else {
+          div.textContent = '👨';
+        }
+        rowDiv.appendChild(div);
+      }
+      
+      lineEl.appendChild(rowDiv);
+    }
+    const correct = targetIndex + 1;
+    const opts = new Set([correct]);
+    while (opts.size < 4) {
+      const offset = Math.floor(Math.random() * 11) - 5;
+      const n = correct + offset;
+      if (n >= 1 && n <= peopleNum) opts.add(n);
+    }
+    [...opts].sort((a, b) => a - b).forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = 'optBtn';
+      btn.textContent = n;
+      // シンプルなクリックイベント
+      btn.addEventListener('click', () => {
+        clearInterval(timerId);
+        const rt = 10 - timeLeft;
+        
+        if (n === correct) {
+          play(correctAudio);
+          score++;
+          reactTimes.push(rt);
+          scoreEl.textContent = `スコア: ${score}`;
+          peopleNum += 2;
+          setTimeout(nextQuestion, 300);
+        } else {
+          play(wrongAudio);
+          endGame();
+        }
+      });
+      optionsEl.appendChild(btn);
+    });
+    timeLeft = 10;
+    updateTimer();
+    timerId = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        clearInterval(timerId);
+        play(wrongAudio);
+        endGame();
+      }
+      updateTimer();
+    }, 100);
+  }
+
+  function updateTimer() {
+    timerEl.textContent = `のこりじかん ${timeLeft.toFixed(1)}秒`;
+  }
+
+  function endGame() {
+    optionsEl.innerHTML = '';
+    timerEl.style.visibility = 'hidden';
+    if (score > 0) {
+      nameInputContainer.style.display = 'block';
+      playerNameInput.value = localStorage.getItem(LASTNAME_KEY) || '';
+      playerNameInput.focus();
+    } else {
+      document.getElementById('ranking').style.display = 'block';
+      document.getElementById('startBtn').style.display = '';
+    }
+  }
+
+  function submitScore() {
+    const name = playerNameInput.value.trim();
+    if(name){
+      localStorage.setItem(LASTNAME_KEY, name);
+      const avg = reactTimes.length ? reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length : 0;
+      const lb = loadLB();
+      lb.push({name, score: score, avg: avg});
+      lb.sort((a, b) => b.score - a.score);
+      if(lb.length > 10) lb.length = 10;
+      saveLB(lb);
+      renderLB();
+    }
+    nameInputContainer.style.display = 'none';
+    document.getElementById('ranking').style.display = 'block';
+    document.getElementById('startBtn').style.display = '';
+  }
+
+  submitNameBtn.addEventListener('click', submitScore);
+  playerNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitScore();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    const pw = prompt("パスワードを入力してください：");
+    if (pw === '0000') {
+      localStorage.removeItem(LB_KEY);
+      renderLB();
+      alert("ランキングをリセットしました。");
+    } else if (pw !== null) {
+      alert("パスワードが違います。");
+    }
+  });
+
+  // スタートボタンのイベントハンドラ
+  startBtn.addEventListener('click', function() {
+    startBtn.style.display = 'none';
+    startGame();
+  });
+
+  renderLB();
+})();
+</script>
+</body>
+</html>
