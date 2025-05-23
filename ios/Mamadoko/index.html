@@ -27,6 +27,10 @@
     #nameInputContainer input[type="text"]{padding:10px;font-size:18px;border:1px solid #ccc; border-radius:5px; margin-right:10px;}
     #nameInputContainer button{padding:10px 20px;font-size:18px;border:none;border-radius:5px;background:#2196f3;color:#fff;cursor:pointer;}
     #nameInputContainer button:hover{filter:brightness(1.1);}
+    #storeContainer{margin:20px auto; max-width:300px; display:none;}
+    #remainingPlays{font-size:14px; color:#666; margin:5px 0;}
+    #purchaseBtn{padding:12px 25px; background:#4CAF50; color:white; border:none; border-radius:8px; margin:10px auto; font-size:16px; display:block; cursor:pointer;}
+    #restoreBtn{padding:8px 15px; background:#90CAF9; color:black; border:none; border-radius:6px; margin:5px auto; font-size:14px; display:block; cursor:pointer;}
   </style>
 </head>
 <body>
@@ -40,6 +44,12 @@
   </div>
   <div id="options"></div>
   <button id="startBtn" style="margin-top:15px;">START</button>
+  
+  <div id="storeContainer">
+    <div id="remainingPlays"></div>
+    <button id="purchaseBtn">広告非表示を購入 ($1)</button>
+    <button id="restoreBtn">購入を復元</button>
+  </div>
 </div>
 
 <div id="nameInputContainer">
@@ -65,6 +75,10 @@
   const playerNameInput = document.getElementById('playerNameInput');
   const submitNameBtn = document.getElementById('submitNameBtn');
   const lbList = document.getElementById('leaderboard');
+  const storeContainer = document.getElementById('storeContainer');
+  const remainingPlays = document.getElementById('remainingPlays');
+  const purchaseBtn = document.getElementById('purchaseBtn');
+  const restoreBtn = document.getElementById('restoreBtn');
 
   let score = 0;
   let peopleNum = 8;
@@ -107,6 +121,67 @@
       console.log("音声再生エラー:", e);
     }
   };
+  
+  // ネイティブ側にゲーム開始を通知
+  const notifyGameStart = () => {
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.gameStart) {
+        window.webkit.messageHandlers.gameStart.postMessage('start');
+      }
+    } catch (e) {
+      console.log("ゲーム開始通知エラー:", e);
+    }
+  };
+  
+  // ネイティブ側にゲーム終了を通知
+  const notifyGameEnd = () => {
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.gameEnd) {
+        window.webkit.messageHandlers.gameEnd.postMessage({score: score});
+      }
+    } catch (e) {
+      console.log("ゲーム終了通知エラー:", e);
+    }
+  };
+  
+  // 残りプレイ回数を表示
+  window.updateRemainingPlays = (count, isAdFree) => {
+    if (isAdFree) {
+      remainingPlays.textContent = "広告非表示購入済み";
+      purchaseBtn.style.display = "none";
+      storeContainer.style.display = "block";
+    } else if (count > 0) {
+      remainingPlays.textContent = `残り無料プレイ回数: ${count}回`;
+      purchaseBtn.style.display = "block";
+      storeContainer.style.display = "block";
+    } else {
+      remainingPlays.textContent = "無料プレイ終了 - 3回に1回広告が表示されます";
+      purchaseBtn.style.display = "block";
+      storeContainer.style.display = "block";
+    }
+  };
+  
+  // 購入処理
+  purchaseBtn.addEventListener('click', () => {
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.purchase) {
+        window.webkit.messageHandlers.purchase.postMessage('removeAds');
+      }
+    } catch (e) {
+      console.log("購入リクエストエラー:", e);
+    }
+  });
+  
+  // 購入復元処理
+  restoreBtn.addEventListener('click', () => {
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.restore) {
+        window.webkit.messageHandlers.restore.postMessage('restore');
+      }
+    } catch (e) {
+      console.log("購入復元リクエストエラー:", e);
+    }
+  });
   
   // ダミーオブジェクト
   const correctAudio = { type: 'correct' };
@@ -151,6 +226,11 @@
     timerEl.style.visibility = 'visible';
     document.getElementById('ranking').style.display = 'none';
     nameInputContainer.style.display = 'none';
+    storeContainer.style.display = 'none';
+    
+    // ネイティブ側にゲーム開始を通知
+    notifyGameStart();
+    
     nextQuestion();
   }
 
@@ -251,6 +331,10 @@
   function endGame() {
     optionsEl.innerHTML = '';
     timerEl.style.visibility = 'hidden';
+    
+    // ネイティブ側にゲーム終了を通知
+    notifyGameEnd();
+    
     if (score > 0) {
       nameInputContainer.style.display = 'block';
       playerNameInput.value = localStorage.getItem(LASTNAME_KEY) || '';
@@ -258,6 +342,7 @@
     } else {
       document.getElementById('ranking').style.display = 'block';
       document.getElementById('startBtn').style.display = '';
+      storeContainer.style.display = 'block';
     }
   }
 
@@ -276,6 +361,7 @@
     nameInputContainer.style.display = 'none';
     document.getElementById('ranking').style.display = 'block';
     document.getElementById('startBtn').style.display = '';
+    storeContainer.style.display = 'block';
   }
 
   submitNameBtn.addEventListener('click', submitScore);
@@ -301,6 +387,15 @@
   });
 
   renderLB();
+  
+  // ページロード時にネイティブ側に初期化完了を通知
+  try {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pageLoaded) {
+      window.webkit.messageHandlers.pageLoaded.postMessage('loaded');
+    }
+  } catch (e) {
+    console.log("ページロード通知エラー:", e);
+  }
 })();
 </script>
 </body>

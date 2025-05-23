@@ -1,0 +1,8 @@
+platform :ios, '14.0'
+
+target 'Mamadoko' do
+  use_frameworks!
+
+  # 広告表示用ライブラリ
+  pod 'Google-Mobile-Ads-SDK'
+end

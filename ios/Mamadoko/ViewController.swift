@@ -2,6 +2,8 @@ import UIKit
 import WebKit
 import AVFoundation
 import AudioToolbox
+import GoogleMobileAds
+import StoreKit
 
 // 音声プレーヤーを管理するクラス
 class SoundManager {
@@ -132,10 +134,35 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
     // Add delegates for sound messages
     let soundManager = SoundManager.shared
     
+    // ゲーム管理
+    let gameManager = GameManager.shared
+    
+    // 広告管理
+    let adManager = AdManager.shared
+    
+    // アラート表示用
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // soundManagerは既にプロパティとして初期化済み
+        
+        // GameManagerの初期設定
+        gameManager.loadProducts()
+        gameManager.purchaseCompletionHandler = { [weak self] success, message in
+            if let message = message {
+                DispatchQueue.main.async {
+                    self?.showAlert(title: success ? "購入完了" : "購入エラー", message: message)
+                    // 購入状態を画面に反映
+                    self?.updateRemainingPlaysDisplay()
+                }
+            }
+        }
         
         // WebViewの設定
         let webConfiguration = WKWebViewConfiguration()
@@ -170,6 +197,11 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
         contentController.add(self, name: "jsError")
         contentController.add(self, name: "playCorrect")
         contentController.add(self, name: "playWrong")
+        contentController.add(self, name: "gameStart")
+        contentController.add(self, name: "gameEnd")
+        contentController.add(self, name: "pageLoaded")
+        contentController.add(self, name: "purchase")
+        contentController.add(self, name: "restore")
         
         // WebViewの作成
         webView = WKWebView(frame: self.view.frame, configuration: webConfiguration)
@@ -201,6 +233,20 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
             print("アクセス許可ディレクトリ: \(dirUrl)")
         } else {
             print("HTMLファイルが見つかりません")
+        }
+    }
+    
+    // 残りプレイ回数表示を更新
+    private func updateRemainingPlaysDisplay() {
+        let count = gameManager.getRemainingFreePlayCount()
+        let isAdFree = gameManager.isAdFree()
+        
+        // JavaScriptを実行して残りプレイ回数を表示
+        let js = "window.updateRemainingPlays(\(count), \(isAdFree));"
+        webView.evaluateJavaScript(js) { (result, error) in
+            if let error = error {
+                print("残りプレイ回数表示更新エラー: \(error)")
+            }
         }
     }
     
@@ -257,23 +303,65 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
     
     // JavaScriptからのメッセージを受け取るメソッド
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        if message.name == "jsError" {
+        switch message.name {
+        case "jsError":
             print("JavaScript Error: \(message.body)")
-        } else if message.name == "playCorrect" {
+            
+        case "playCorrect":
             print("正解音再生リクエストを受信")
             soundManager.playCorrect()
             
-            // 振動フィードバック
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-        } else if message.name == "playWrong" {
+        case "playWrong":
             print("不正解音再生リクエストを受信")
             soundManager.playWrong()
             
-            // 振動フィードバック
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.error)
+        case "gameStart":
+            print("ゲーム開始通知を受信")
+            // プレイ可能かチェック
+            if gameManager.canPlay() {
+                // プレイ回数を記録
+                gameManager.recordPlay()
+                
+                // 広告表示が必要かチェック
+                if gameManager.shouldShowAd() {
+                    // 広告表示
+                    adManager.showInterstitialAd(from: self) { [weak self] in
+                        // 広告表示後の処理
+                        print("広告表示完了")
+                    }
+                }
+            } else {
+                // プレイ不可の場合は購入画面を表示
+                showAlert(title: "プレイ制限", message: "無料プレイ回数を使い切りました。広告を見るか、広告非表示機能を購入してください。")
+            }
+            
+        case "gameEnd":
+            print("ゲーム終了通知を受信")
+            // スコア情報があれば取得
+            if let data = message.body as? [String: Any], let score = data["score"] as? Int {
+                print("ゲーム終了スコア: \(score)")
+            }
+            
+            // 残りプレイ回数を更新
+            updateRemainingPlaysDisplay()
+            
+        case "pageLoaded":
+            print("ページロード完了通知を受信")
+            // 残りプレイ回数を表示
+            updateRemainingPlaysDisplay()
+            
+        case "purchase":
+            print("購入リクエストを受信")
+            // 広告非表示購入処理を実行
+            gameManager.purchaseRemoveAds()
+            
+        case "restore":
+            print("購入復元リクエストを受信")
+            // 購入復元処理を実行
+            gameManager.restorePurchases()
+            
+        default:
+            print("未知のメッセージハンドラ: \(message.name)")
         }
     }
-    
 }
