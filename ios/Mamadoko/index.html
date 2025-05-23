@@ -9,8 +9,8 @@
     body{font-family:sans-serif;text-align:center;padding:20px 10px;background:#dcf0ff;width:100%;max-width:100%;margin:0 auto;box-sizing:border-box;}
     h1{font-size:18px;margin:5px 0;}
     #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
-    /* 背景色を統一して枠を見えなくする */
-    #gameArea{background:#dcf0ff; padding:5px 0; margin:5px 0; border:none;}
+    /* gameAreaの枠を完全に消す */
+    #gameArea{max-height:50vh; overflow-y:auto; -webkit-overflow-scrolling:touch; background:transparent; padding:0; margin:0; border:none; box-shadow:none; outline:none;}
     #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
     .row{display:flex;justify-content:center;width:100%;margin-bottom:2px;}
     .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;background:transparent;}
@@ -41,9 +41,8 @@
   <div id="hero" aria-label="挙手する女性" style="margin-top:60px;">🙋‍♀️</div>
   <div id="score">スコア: 0</div>
   <div id="timer">のこりじかん 0秒</div>
-  <div id="gameArea" style="max-height:50vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-    <div id="line"></div>
-  </div>
+  <!-- gameAreaを直接、装飾なしのdivとして表示 -->
+  <div id="line"></div>
   <div id="options"></div>
   <button id="startBtn" style="margin-top:15px;">START</button>
   
@@ -256,8 +255,6 @@
     optionsEl.innerHTML = '';
     targetIndex = Math.floor(Math.random() * peopleNum);
     
-    // スクロール位置をリセット
-    document.getElementById('gameArea').scrollTop = 0;
     const animals = ['🐼','🐮','🐷','🐥'];
     const numAnimals = Math.floor(score / 5);
     const animalIndices = new Set();
@@ -296,6 +293,21 @@
       
       lineEl.appendChild(rowDiv);
     }
+    
+    // lineElが画面からはみ出る場合、スクロール可能にする
+    if (lineEl.scrollHeight > window.innerHeight * 0.5) {
+      lineEl.style.maxHeight = '50vh';
+      lineEl.style.overflowY = 'auto';
+      lineEl.style.webkitOverflowScrolling = 'touch';
+    } else {
+      lineEl.style.maxHeight = '';
+      lineEl.style.overflowY = '';
+      lineEl.style.webkitOverflowScrolling = '';
+    }
+    
+    // スクロール位置をリセット
+    lineEl.scrollTop = 0;
+    
     const correct = targetIndex + 1;
     const opts = new Set([correct]);
     while (opts.size < 4) {
