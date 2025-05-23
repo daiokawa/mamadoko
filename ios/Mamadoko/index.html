@@ -6,42 +6,246 @@
   <title>ママはひだりから数えてなんばんめ？</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50%25' x='50%25' dominant-baseline='central' text-anchor='middle' font-size='54'%3E🙋‍♀️%3C/text%3E%3C/svg%3E">
   <style>
-    body{font-family:sans-serif;text-align:center;padding:20px 10px;background:#dcf0ff;width:100%;max-width:100%;margin:0 auto;box-sizing:border-box;}
-    h1{font-size:18px;margin:5px 0;}
-    #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
-    #line{display:none;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
-    .row{display:flex;justify-content:center;width:100%;margin-bottom:2px;}
-    .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;background:transparent;}
-    #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
-    #score{margin:5px auto 15px;font-weight:bold;font-size:20px;text-align:center;width:100%;}
-    #options{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
-    .optBtn{padding:12px 24px;font-size:20px;border:none;border-radius:8px;background:#2196f3;color:#fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);}    
-    .optBtn:active{background:#1976D2;}
-    #startBtn{padding:15px 30px;font-size:22px;border:none;border-radius:10px;background:#0066cc;color:#fff;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.3);-webkit-appearance:none;}    
-    #startBtn:active{background:#0055aa;}  
-    #ranking{margin-top:30px;text-align:left;padding-left:20px;padding-right:20px;}
-    #ranking h2{font-size:22px;margin-bottom:6px;}
-    #leaderboard{padding-left:40px;}
-    #resetBtn{margin-left:20px;margin-top:10px;padding:6px 16px;font-size:14px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;}
-    #nameInputContainer{margin-top:20px; display:none;}
-    #nameInputContainer input[type="text"]{padding:10px;font-size:18px;border:1px solid #ccc; border-radius:5px; margin-right:10px;}
-    #nameInputContainer button{padding:10px 20px;font-size:18px;border:none;border-radius:5px;background:#2196f3;color:#fff;cursor:pointer;}
-    #nameInputContainer button:hover{filter:brightness(1.1);}
-    #storeContainer{margin:20px auto; max-width:300px; display:none;}
-    #remainingPlays{font-size:14px; color:#666; margin:5px 0;}
-    #purchaseBtn{padding:12px 25px; background:#4CAF50; color:white; border:none; border-radius:8px; margin:10px auto; font-size:16px; display:block; cursor:pointer;}
-    #restoreBtn{padding:8px 15px; background:#90CAF9; color:black; border:none; border-radius:6px; margin:5px auto; font-size:14px; display:block; cursor:pointer;}
+    body, html {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+      background: #dcf0ff;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .container {
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 20px 10px;
+      background: #dcf0ff;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin: 5px 0;
+    }
+    
+    #hero {
+      font-size: 80px;
+      line-height: 80px;
+      height: 80px;
+      margin: 0 auto 5px;
+      overflow: hidden;
+      text-align: center;
+    }
+    
+    #line {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin: 5px auto;
+      gap: 2px;
+      width: 100%;
+      max-width: 100%;
+    }
+    
+    .row {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 2px;
+    }
+    
+    .person {
+      display: inline-block;
+      width: auto;
+      height: auto;
+      font-size: 20px;
+      margin: 0 2px;
+      cursor: default;
+      user-select: none;
+      line-height: 1;
+      background: transparent;
+    }
+    
+    #timer {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 5px;
+      visibility: hidden;
+    }
+    
+    #score {
+      margin: 5px auto 15px;
+      font-weight: bold;
+      font-size: 20px;
+      text-align: center;
+      width: 100%;
+    }
+    
+    #options {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .optBtn {
+      padding: 12px 24px;
+      font-size: 20px;
+      border: none;
+      border-radius: 8px;
+      background: #2196f3;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    }
+    
+    .optBtn:active {
+      background: #1976D2;
+    }
+    
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 22px;
+      border: none;
+      border-radius: 10px;
+      background: #0066cc;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,.3);
+      -webkit-appearance: none;
+      margin-top: 15px;
+    }
+    
+    #startBtn:active {
+      background: #0055aa;
+    }
+    
+    #ranking {
+      margin-top: 30px;
+      text-align: left;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    
+    #ranking h2 {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+    
+    #leaderboard {
+      padding-left: 40px;
+    }
+    
+    #resetBtn {
+      margin-left: 20px;
+      margin-top: 10px;
+      padding: 6px 16px;
+      font-size: 14px;
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    #nameInputContainer {
+      margin-top: 20px;
+      display: none;
+    }
+    
+    #nameInputContainer input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    
+    #nameInputContainer button {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      background: #2196f3;
+      color: #fff;
+      cursor: pointer;
+    }
+    
+    #nameInputContainer button:hover {
+      filter: brightness(1.1);
+    }
+    
+    #storeContainer {
+      margin: 20px auto;
+      max-width: 300px;
+      display: none;
+    }
+    
+    #remainingPlays {
+      font-size: 14px;
+      color: #666;
+      margin: 5px 0;
+    }
+    
+    #purchaseBtn {
+      padding: 12px 25px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin: 10px auto;
+      font-size: 16px;
+      display: block;
+      cursor: pointer;
+    }
+    
+    #restoreBtn {
+      padding: 8px 15px;
+      background: #90CAF9;
+      color: black;
+      border: none;
+      border-radius: 6px;
+      margin: 5px auto;
+      font-size: 14px;
+      display: block;
+      cursor: pointer;
+    }
+    
+    /* 白い線対策 */
+    input, div, button, body * {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      outline: none;
+    }
+    
+    /* 枠線の周りと同じ水色にする */
+    .empty-line {
+      height: 1px;
+      background-color: #dcf0ff;
+      border: none;
+      margin: 0;
+      padding: 0;
+    }
   </style>
 </head>
 <body>
-<div style="max-width:360px; margin:0 auto;">
+<div class="container">
   <h1>ママはひだりから数えてなんばんめ？</h1>
   <div id="hero" aria-label="挙手する女性" style="margin-top:60px;">🙋‍♀️</div>
   <div id="score">スコア: 0</div>
   <div id="timer">のこりじかん 0秒</div>
+  
+  <!-- 白い線の代わりに背景色と同じ色のdivを配置 -->
+  <div class="empty-line"></div>
+  
   <div id="line"></div>
   <div id="options"></div>
-  <button id="startBtn" style="margin-top:15px;">START</button>
+  <button id="startBtn">START</button>
   
   <div id="storeContainer">
     <div id="remainingPlays"></div>
