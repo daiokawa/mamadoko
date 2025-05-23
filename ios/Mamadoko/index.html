@@ -9,18 +9,18 @@
     body{font-family:sans-serif;text-align:center;padding:20px 10px;background:#dcf0ff;width:100%;max-width:100%;margin:0 auto;box-sizing:border-box;}
     h1{font-size:18px;margin:5px 0;}
     #hero{font-size:80px;line-height:80px;height:80px;margin:0 auto 5px; overflow: hidden; text-align:center;}
-    #gameArea{background:#e6f5ff; border-radius:10px; padding:5px 0; margin:5px 0; border:1px solid rgba(0,0,0,0.1);}
+    /* 背景色を統一して枠を見えなくする */
+    #gameArea{background:#dcf0ff; padding:5px 0; margin:5px 0; border:none;}
     #line{display:flex;flex-direction:column;align-items:center;margin:5px auto;gap:2px;width:100%;max-width:100%;}
-    /* 白枠を完全に消すためのスタイル変更 */
     .row{display:flex;justify-content:center;width:100%;margin-bottom:2px;}
-    .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;}
+    .person{display:inline-block;width:auto;height:auto;font-size:20px;margin:0 2px;cursor:default;user-select:none;line-height:1;background:transparent;}
     #timer{font-size:26px;font-weight:bold;margin:5px;visibility:hidden;}
     #score{margin:5px auto 15px;font-weight:bold;font-size:20px;text-align:center;width:100%;}
     #options{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
     .optBtn{padding:12px 24px;font-size:20px;border:none;border-radius:8px;background:#2196f3;color:#fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);}    
     .optBtn:active{background:#1976D2;}
     #startBtn{padding:15px 30px;font-size:22px;border:none;border-radius:10px;background:#0066cc;color:#fff;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.3);-webkit-appearance:none;}    
-    #startBtn:hover{filter:brightness(1.1);}  
+    #startBtn:active{background:#0055aa;}  
     #ranking{margin-top:30px;text-align:left;padding-left:20px;padding-right:20px;}
     #ranking h2{font-size:22px;margin-bottom:6px;}
     #leaderboard{padding-left:40px;}
@@ -89,6 +89,7 @@
   let timerId;
   let reactTimes = [];
   let gameActive = false; // ゲームがアクティブかどうかのフラグ
+  let startButtonClicked = false; // スタートボタンが押されたかどうかのフラグ
   const LB_KEY = 'mama_leaderboard';
   const LASTNAME_KEY = 'mama_last_name';
 
@@ -225,6 +226,10 @@
   };
 
   function startGame() {
+    // スタートボタンがすでに押されている場合は何もしない
+    if (startButtonClicked) return;
+    
+    startButtonClicked = true;
     score = 0;
     peopleNum = 8;
     reactTimes = [];
@@ -238,7 +243,10 @@
     // ネイティブ側にゲーム開始を通知
     notifyGameStart();
     
-    nextQuestion();
+    // 少し遅延させてゲームを開始（タップ誤検知防止）
+    setTimeout(() => {
+      nextQuestion();
+    }, 300);
   }
 
   function nextQuestion() {
@@ -347,6 +355,7 @@
     if (!gameActive) return;
     
     gameActive = false; // ゲーム終了
+    startButtonClicked = false; // スタートボタンのフラグをリセット
     clearInterval(timerId);
     timerId = null;
     
@@ -422,9 +431,16 @@
   });
   
   // スタートボタンのイベントハンドラ
-  startBtn.addEventListener('click', function() {
+  startBtn.addEventListener('click', function(e) {
+    // イベントが伝播しないようにする
+    e.preventDefault();
+    e.stopPropagation();
+    
     startBtn.style.display = 'none';
     startGame();
+    
+    // 誤タップ防止のためにfalseを返す
+    return false;
   });
 
   renderLB();
