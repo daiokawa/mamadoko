@@ -2,7 +2,6 @@ import UIKit
 import WebKit
 import AVFoundation
 import AudioToolbox
-import GoogleMobileAds
 import StoreKit
 
 // 音声プレーヤーを管理するクラス
@@ -137,8 +136,6 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
     // ゲーム管理
     let gameManager = GameManager.shared
     
-    // 広告管理
-    let adManager = AdManager.shared
     
     // アラート表示用
     private func showAlert(title: String, message: String) {
@@ -154,7 +151,7 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
         
         // GameManagerの初期設定
         gameManager.loadProducts()
-        gameManager.purchaseCompletionHandler = { [weak self] success, message in
+        gameManager.purchaseCompletionHandler = { [weak self] (success: Bool, message: String?) in
             if let message = message {
                 DispatchQueue.main.async {
                     self?.showAlert(title: success ? "購入完了" : "購入エラー", message: message)
@@ -238,14 +235,29 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
     
     // 残りプレイ回数表示を更新
     private func updateRemainingPlaysDisplay() {
-        let count = gameManager.getRemainingFreePlayCount()
-        let isAdFree = gameManager.isAdFree()
+        let freeCount = gameManager.getRemainingFreePlayCount()
+        let hourlyCount = gameManager.getRemainingHourlyPlays()
+        let hasUnlimited = gameManager.hasUnlimitedPlay()
         
         // JavaScriptを実行して残りプレイ回数を表示
-        let js = "window.updateRemainingPlays(\(count), \(isAdFree));"
+        let js = "window.updateRemainingPlays(\(freeCount), \(hourlyCount), \(hasUnlimited));"
         webView.evaluateJavaScript(js) { (result, error) in
             if let error = error {
                 print("残りプレイ回数表示更新エラー: \(error)")
+            }
+        }
+    }
+    
+    // 実績表示を更新
+    private func updateAchievementDisplay() {
+        let level = gameManager.getCurrentAchievementLevel()
+        let stagesCleared = gameManager.getTotalStagesCleared()
+        
+        // JavaScriptを実行して実績を表示
+        let js = "window.updateAchievement('\(level)', \(stagesCleared));"
+        webView.evaluateJavaScript(js) { (result, error) in
+            if let error = error {
+                print("実績表示更新エラー: \(error)")
             }
         }
     }
@@ -321,18 +333,24 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
             if gameManager.canPlay() {
                 // プレイ回数を記録
                 gameManager.recordPlay()
-                
-                // 広告表示が必要かチェック
-                if gameManager.shouldShowAd() {
-                    // 広告表示
-                    adManager.showInterstitialAd(from: self) { [weak self] in
-                        // 広告表示後の処理
-                        print("広告表示完了")
+                // ゲームを続行
+                webView.evaluateJavaScript("window.startGameAllowed()") { (result, error) in
+                    if let error = error {
+                        print("ゲーム開始許可エラー: \(error)")
                     }
                 }
             } else {
-                // プレイ不可の場合は購入画面を表示
-                showAlert(title: "プレイ制限", message: "無料プレイ回数を使い切りました。広告を見るか、広告非表示機能を購入してください。")
+                // プレイ不可の場合はメッセージを表示
+                let freeRemaining = gameManager.getRemainingFreePlayCount()
+                let hourlyRemaining = gameManager.getRemainingHourlyPlays()
+                
+                var message = "無料プレイ回数を使い切りました。\n"
+                if hourlyRemaining == 0 {
+                    message += "1時間後に2回プレイできます。\n"
+                }
+                message += "無制限プレイを購入しますか？"
+                
+                showAlert(title: "プレイ制限", message: message)
             }
             
         case "gameEnd":
@@ -340,6 +358,12 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
             // スコア情報があれば取得
             if let data = message.body as? [String: Any], let score = data["score"] as? Int {
                 print("ゲーム終了スコア: \(score)")
+                // ステージクリアを記録
+                if score > 0 {
+                    gameManager.recordStageCleared()
+                    // 実績状態を更新
+                    updateAchievementDisplay()
+                }
             }
             
             // 残りプレイ回数を更新
@@ -352,8 +376,8 @@ class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKSc
             
         case "purchase":
             print("購入リクエストを受信")
-            // 広告非表示購入処理を実行
-            gameManager.purchaseRemoveAds()
+            // 無制限プレイ購入処理を実行
+            gameManager.purchaseUnlimitedPlay()
             
         case "restore":
             print("購入復元リクエストを受信")

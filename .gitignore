@@ -1,0 +1,38 @@
+# Xcode
+.DS_Store
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+
+# CocoaPods
+ios/Pods/
+ios/Podfile.lock
+
+# AppCode
+.idea/
+
+# Build products
+*.app
+*.dSYM.zip
+*.dSYM
+
+# Provisioning profiles
+*.mobileprovision
+*.certSigningRequest
+
+# User-specific files
+*.xcworkspace
+!default.xcworkspace

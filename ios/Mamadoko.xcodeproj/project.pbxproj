@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7BD0C5D3CDD6C16EACB58CC5 /* Pods_Mamadoko.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F24DB31BCD3E000EAB46761 /* Pods_Mamadoko.framework */; };
 		9BF8C19E2DE0204600F89847 /* correct02.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9BF8C19D2DE0204600F89847 /* correct02.mp3 */; };
 		CE4A87E82B04F5D400FE5172 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4A87E72B04F5D400FE5172 /* AppDelegate.swift */; };
 		CE4A87EC2B04F5D400FE5172 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4A87EB2B04F5D400FE5172 /* ViewController.swift */; };
@@ -15,10 +16,15 @@
 		CE4A87FC2B04F78100FE5172 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = CE4A87FB2B04F78100FE5172 /* index.html */; };
 		CE4A87FE2B04F7B600FE5172 /* correct.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE4A87FD2B04F7B600FE5172 /* correct.mp3 */; };
 		CE4A88002B04F7BC00FE5172 /* wrong.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE4A87FF2B04F7BC00FE5172 /* wrong.mp3 */; };
+		08E28885-3F03-4803-A040-69E80F319E76 /* GameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798D76E1-3BB8-4EBA-AE68-0698B8FA52DD /* GameManager.swift */; };
+		7D253B39-3CF6-4B01-9067-47524C06AC5D /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B239C3C5-97E7-42AB-ADD1-93094251FDF1 /* AdManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		973AF138693D3030ADB953D0 /* Pods-Mamadoko.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mamadoko.release.xcconfig"; path = "Target Support Files/Pods-Mamadoko/Pods-Mamadoko.release.xcconfig"; sourceTree = "<group>"; };
 		9BF8C19D2DE0204600F89847 /* correct02.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = correct02.mp3; sourceTree = "<group>"; };
+		9F24DB31BCD3E000EAB46761 /* Pods_Mamadoko.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Mamadoko.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFA9016FE029C028B870535E /* Pods-Mamadoko.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mamadoko.debug.xcconfig"; path = "Target Support Files/Pods-Mamadoko/Pods-Mamadoko.debug.xcconfig"; sourceTree = "<group>"; };
 		CE4A87E42B04F5D400FE5172 /* Mamadoko.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mamadoko.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE4A87E72B04F5D400FE5172 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CE4A87EB2B04F5D400FE5172 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -28,6 +34,8 @@
 		CE4A87FB2B04F78100FE5172 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		CE4A87FD2B04F7B600FE5172 /* correct.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = correct.mp3; sourceTree = "<group>"; };
 		CE4A87FF2B04F7BC00FE5172 /* wrong.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = wrong.mp3; sourceTree = "<group>"; };
+		798D76E1-3BB8-4EBA-AE68-0698B8FA52DD /* GameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameManager.swift; sourceTree = "<group>"; };
+		B239C3C5-97E7-42AB-ADD1-93094251FDF1 /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,17 +43,38 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BD0C5D3CDD6C16EACB58CC5 /* Pods_Mamadoko.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		52044DF8313A9CBA08892B50 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9F24DB31BCD3E000EAB46761 /* Pods_Mamadoko.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8D2818B7A6BFACAA42C2EFD1 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				AFA9016FE029C028B870535E /* Pods-Mamadoko.debug.xcconfig */,
+				973AF138693D3030ADB953D0 /* Pods-Mamadoko.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		CE4A87DB2B04F5D400FE5172 = {
 			isa = PBXGroup;
 			children = (
 				CE4A87E62B04F5D400FE5172 /* Mamadoko */,
 				CE4A87E52B04F5D400FE5172 /* Products */,
+				8D2818B7A6BFACAA42C2EFD1 /* Pods */,
+				52044DF8313A9CBA08892B50 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,6 +91,8 @@
 			children = (
 				CE4A87E72B04F5D400FE5172 /* AppDelegate.swift */,
 				CE4A87EB2B04F5D400FE5172 /* ViewController.swift */,
+				798D76E1-3BB8-4EBA-AE68-0698B8FA52DD /* GameManager.swift */,
+				B239C3C5-97E7-42AB-ADD1-93094251FDF1 /* AdManager.swift */,
 				CE4A87F02B04F5D600FE5172 /* Assets.xcassets */,
 				CE4A87F22B04F5D600FE5172 /* LaunchScreen.storyboard */,
 				CE4A87F52B04F5D600FE5172 /* Info.plist */,
@@ -80,9 +111,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE4A87F82B04F5D600FE5172 /* Build configuration list for PBXNativeTarget "Mamadoko" */;
 			buildPhases = (
+				69FB8327968A8DA70EE83DB6 /* [CP] Check Pods Manifest.lock */,
 				CE4A87E02B04F5D400FE5172 /* Sources */,
 				CE4A87E12B04F5D400FE5172 /* Frameworks */,
 				CE4A87E22B04F5D400FE5172 /* Resources */,
+				2339542DDD1516056BA9EA63 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -142,6 +175,48 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		2339542DDD1516056BA9EA63 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Mamadoko/Pods-Mamadoko-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Mamadoko/Pods-Mamadoko-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Mamadoko/Pods-Mamadoko-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		69FB8327968A8DA70EE83DB6 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Mamadoko-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		CE4A87E02B04F5D400FE5172 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -149,6 +224,8 @@
 			files = (
 				CE4A87EC2B04F5D400FE5172 /* ViewController.swift in Sources */,
 				CE4A87E82B04F5D400FE5172 /* AppDelegate.swift in Sources */,
+				08E28885-3F03-4803-A040-69E80F319E76 /* GameManager.swift in Sources */,
+				7D253B39-3CF6-4B01-9067-47524C06AC5D /* AdManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +364,7 @@
 		};
 		CE4A87F92B04F5D600FE5172 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AFA9016FE029C028B870535E /* Pods-Mamadoko.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -320,6 +398,7 @@
 		};
 		CE4A87FA2B04F5D600FE5172 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 973AF138693D3030ADB953D0 /* Pods-Mamadoko.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

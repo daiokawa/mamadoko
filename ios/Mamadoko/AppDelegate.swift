@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.backgroundColor = UIColor(red: 220/255, green: 240/255, blue: 255/255, alpha: 1.0)
         
         // Google Mobile Adsの初期化
-        GADMobileAds.sharedInstance().start { status in
+        MobileAds.shared.start { status in
             print("Google Mobile Ads初期化完了: \(status.adapterStatusesByClassName)")
         }
         
